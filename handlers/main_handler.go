@@ -1,11 +1,11 @@
 package handlers
 
 import (
+	"groupie/controllers"
 	"groupie/models"
 	"html/template"
 	"log"
 	"net/http"
-	"strings"
 )
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
@@ -23,26 +23,33 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract unique locations from the artist data
-	locationSet := make(map[string]struct{})
+	// Fetch locations from the API
+	var locations []string
 	for _, artist := range artists {
-		locations := strings.Split(artist.Locations, ",") // Assuming locations are comma-separated
-		for _, loc := range locations {
-			locationSet[strings.TrimSpace(loc)] = struct{}{}
+		var loca models.Location
+		err := controllers.FetchData(artist.Locations, &loca)
+		if err == nil {
+			locations = append(locations, loca.Locations...)
 		}
 	}
-	// Create a slice of unique locations
-	var locations []string
+
+	// Remove duplicates from locations
+	locationSet := make(map[string]struct{})
+	for _, loc := range locations {
+		locationSet[loc] = struct{}{}
+	}
+
+	var uniqueLocations []string
 	for loc := range locationSet {
-		locations = append(locations, loc)
+		uniqueLocations = append(uniqueLocations, loc)
 	}
 
 	data := struct {
-		Artists   []models.Artist
-		Locations []string
+		Artists      []models.Artist
+		Locations    []string
 	}{
 		Artists:   artists,
-		Locations: locations,
+		Locations: uniqueLocations,
 	}
 	// Render the main template
 	if err := renderTemplate(w, "index.html", data); err != nil {

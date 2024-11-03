@@ -19,7 +19,7 @@
             text-align: center; 
             margin-bottom: 20px; 
         }
-        input[type="text"], input[type="date"], input[type="number"], select { 
+        input[type="text"] { 
             padding: 10px; 
             width: 300px; 
             border: 1px solid #ddd; 
@@ -87,29 +87,41 @@
 <body>
     <h1>Artists</h1>
     <form method="POST" action="/search">
-        <input type="text" name="q" placeholder="Search artists..." />
-        <input type="date" name="creationDate" placeholder="Creation Date" />
-        <input type="number" name="firstAlbumYearFrom" placeholder="First Album Year From" min="1900" max="2024" />
-        <input type="number" name="firstAlbumYearTo" placeholder="First Album Year To" min="1900" max="2024" />
-        
-        <!-- Member Count Checkbox Filter -->
-        <div>
-            <label><input type="checkbox" name="memberCount" value="1"> 1 Member</label>
-            <label><input type="checkbox" name="memberCount" value="2"> 2 Members</label>
-            <label><input type="checkbox" name="memberCount" value="3"> 3 Members</label>
-            <!-- Add more as needed -->
-        </div>
-        
-        <!-- Location Select -->
-        <select name="concertLocations" multiple>
-            {{range .Locations}}
-                <option value="{{.}}">{{.}}</option>
+        <input type="text" name="q" id="search-bar" placeholder="Search artists, members, etc..." autocomplete="off" list="suggestions">
+        <datalist id="suggestions">
+            {{range .Artists}}
+            <option value="{{.Name}}">
             {{end}}
-        </select>
-        
+        </datalist>
         <button type="submit">Search</button>
     </form>
+    <form method="POST" action="/filter">
+        <h2>Filter Artists</h2>
     
+        <label for="creationYear">Creation Year:</label>
+        <input type="number" name="creationYear" id="creationYear" min="1900" max="2024" step="1" placeholder="Optional"><br>
+    
+        <label for="firstAlbumYear">First Album Year:</label>
+        <input type="range" name="firstAlbumYear" id="firstAlbumYear" min="1900" max="2024" oninput="this.nextElementSibling.value = this.value">
+        <output>1900</output><br>
+    
+        <label>Number of Members:</label><br>
+        <input type="checkbox" name="members" value="1"> 1 Member<br>
+        <input type="checkbox" name="members" value="2"> 2 Members<br>
+        <input type="checkbox" name="members" value="3"> 3 Members<br>
+        <input type="checkbox" name="members" value="4"> 4 Members<br>
+        <input type="checkbox" name="members" value="5"> 5 or more Members<br>
+    
+        <label for="locations">Concert Locations:</label>
+        <select name="locations" id="locations" multiple>
+            <option value="">Select a location (optional)</option> <!-- Default value -->
+            {{range .Locations}}
+            <option value="{{.}}">{{.}}</option>
+            {{end}}
+        </select><br>
+    
+        <button type="submit">Filter</button>
+    </form>
     <ul>
         {{range .Artists}}
         <li>
