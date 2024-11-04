@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"groupie/controllers"
-	"groupie/models"
 	"html/template"
 	"log"
 	"net/http"
+
+	"groupie/models"
 )
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
@@ -22,34 +22,29 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		ErrorHandler(w, r, http.StatusInternalServerError)
 		return
 	}
+	// Prepare to collect unique locations
+	locationSet := make(map[string]struct{}) // To store unique locations
 
-	// Fetch locations from the API
-	var locations []string
 	for _, artist := range artists {
-		var loca models.Location
-		err := controllers.FetchData(artist.Locations, &loca)
-		if err == nil {
-			locations = append(locations, loca.Locations...)
+		if err := GetForeigenData(&artist); err == nil { // Fetch foreign data including locations
+			for _, loc := range artist.Loca.Locations {
+				locationSet[loc] = struct{}{} // Collect unique locations
+			}
 		}
 	}
 
-	// Remove duplicates from locations
-	locationSet := make(map[string]struct{})
-	for _, loc := range locations {
-		locationSet[loc] = struct{}{}
-	}
-
-	var uniqueLocations []string
+	// Convert locationSet to a slice for passing to the template
+	var locations []string
 	for loc := range locationSet {
-		uniqueLocations = append(uniqueLocations, loc)
+		locations = append(locations, loc)
 	}
 
 	data := struct {
-		Artists      []models.Artist
-		Locations    []string
+		Artists   []models.Artist
+		Locations []string // Add Locations field here
 	}{
 		Artists:   artists,
-		Locations: uniqueLocations,
+		Locations: locations,
 	}
 	// Render the main template
 	if err := renderTemplate(w, "index.html", data); err != nil {

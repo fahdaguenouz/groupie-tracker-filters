@@ -1,9 +1,11 @@
 package handlers
 
 import (
-	"groupie/models"
 	"net/http"
 	"strconv"
+	"strings"
+
+	"groupie/models"
 )
 
 func FilterHandler(w http.ResponseWriter, r *http.Request) {
@@ -20,10 +22,10 @@ func FilterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get filter values from the form
-	creationYear := r.FormValue("creationDate")
-	firstAlbumYear := r.FormValue("firstAlbumDate")
+	creationYear := r.FormValue("creationYear")
+	firstAlbumYear := r.FormValue("firstAlbumYear")
 	selectedMembers := r.Form["members"]
-	selectedLocation := r.FormValue("locations")
+	selectedLocations := r.Form["locations"]
 
 	// Prepare to store filtered results
 	var filteredArtists []models.Artist
@@ -33,7 +35,7 @@ func FilterHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Filter by creation year if provided
 		if creationYear != "" {
-			year, err := strconv.Atoi(creationYear[:4]) // Extract year from the date
+			year, err := strconv.Atoi(creationYear) // Convert to int
 			if err != nil || artist.CreationDate != year {
 				matches = false
 			}
@@ -41,57 +43,71 @@ func FilterHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Filter by first album year if provided
 		if firstAlbumYear != "" {
-			year, err := strconv.Atoi(firstAlbumYear) // Convert range value to int
-			if err != nil || artist.FirstAlbum != strconv.Itoa(year) {
-				matches = false
-			}
-		}
-
-		// Filter by number of members if any checkboxes are selected
-		if len(selectedMembers) > 0 {
-			membersCount := len(artist.Members)
-			memberMatches := false
-			for _, member := range selectedMembers {
-				if member == "5" && membersCount >= 5 {
-					memberMatches = true
-					break
-				} else if strconv.Itoa(membersCount) == member {
-					memberMatches = true
-					break
+			firstAlbumDateParts := strings.Split(artist.FirstAlbum, "-") // Assuming FirstAlbum is in "YYYY-MM-DD" format
+			if len(firstAlbumDateParts) > 0 {
+				firstAlbumYearInt, err := strconv.Atoi(firstAlbumDateParts[0]) // Extract year from FirstAlbum
+				if err != nil {
+					matches = false // If there's an error converting the year, do not match
+				} else {
+					providedFirstAlbumYearInt, err := strconv.Atoi(firstAlbumYear) // Convert provided first album year to int
+					if err != nil || firstAlbumYearInt != providedFirstAlbumYearInt { // Compare extracted year with provided year
+						matches = false
+					}
 				}
-			}
-			if !memberMatches {
-				matches = false
-			}
-		}
-
-		// Filter by location if selected
-		if selectedLocation != "" && selectedLocation != "Select a location" {
-			locationMatch := false
-			for _, artistLocation := range artist.Loca.Locations {
-				if artistLocation == selectedLocation {
-					locationMatch = true
-					break
-				}
-			}
-			if !locationMatch {
-				matches = false
+			} else {
+				matches = false // If the format is unexpected, do not match
 			}
 		}
 
-		// If it passes all filters, add to results
-		if matches {
-			filteredArtists = append(filteredArtists, artist)
-		}
-	}
+        // Filter by number of members if any checkboxes are selected
+        if len(selectedMembers) > 0 {
+            membersCount := len(artist.Members)
+            memberMatches := false
+            for _, member := range selectedMembers {
+                if member == "5" && membersCount >= 5 {
+                    memberMatches = true
+                    break
+                } else if strconv.Itoa(membersCount) == member {
+                    memberMatches = true
+                    break
+                }
+            }
+            if !memberMatches {
+                matches = false // Only set matches to false if no member criteria are met.
+            }
+        }
 
-	// Create a template data structure
-	data := struct {
-		Artists []models.Artist
-	}{
-		Artists: filteredArtists,
-	}
+        // Filter by locations if selected
+        if len(selectedLocations) > 0 && selectedLocations[0] != "" { // Check if any location is selected
+            locationMatch := false
+            for _, artistLocation := range artist.Loca.Locations {
+                for _, selectedLocation := range selectedLocations {
+                    if artistLocation == selectedLocation {
+                        locationMatch = true
+                        break
+                    }
+                }
+                if locationMatch {
+                    break // Exit outer loop if a match is found
+                }
+            }
+            if !locationMatch {
+                matches = false // Only set matches to false if no location criteria are met.
+            }
+        }
 
+        // If it passes all filters, add to results
+        if matches {
+            filteredArtists = append(filteredArtists, artist)
+        }
+    }
+
+    // Create a template data structure for rendering results.
+    data := struct {
+        Artists []models.Artist
+    }{
+        Artists: filteredArtists,
+    }
 	// Render the filter results template
 	if err := renderTemplate(w, "filter.html", data); err != nil {
 		ErrorHandler(w, r, http.StatusInternalServerError)
