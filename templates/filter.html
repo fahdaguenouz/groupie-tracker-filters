@@ -64,14 +64,14 @@
     <ul>
         {{range .Artists}}
         <li>
-            <a href="/artists/{{.ID}}">
+            <a href="/artists?id={{.ID}}">
                 <h2>{{.Name}}</h2>
                 <img src="{{.Image}}" alt="{{.Name}}">
             </a>
         </li>
         {{else}}
-        <li>No results found for the selected location.</li>
-        {{end}}
+        <li>No results found for the selected criteria.</li>
+        {{end}}        
     </ul>
     <div style="text-align:center;">
         <a href="/">Return to Home</a>
