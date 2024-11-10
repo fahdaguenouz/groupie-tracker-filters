@@ -107,11 +107,12 @@
         <h2>Filter Artists</h2>
     
         <label for="creationYear">Creation Year:</label>
-        <input type="number" name="creationYear" id="creationYear" min="1900" max="2024" step="1" placeholder="Optional"><br>
-    
-        <label for="firstAlbumYear">First Album Year:</label>
-        <input type="range" name="firstAlbumYear" id="firstAlbumYear" min="1900" max="2024" oninput="this.nextElementSibling.value = this.value">
+        <input type="range" name="creationYear" id="creationYear" min="1900" max="2024" step="1" value="1900" oninput="this.nextElementSibling.value = this.value">
         <output>1900</output><br>
+    
+        <label for="firstAlbumDate">First Album Date:</label>
+    <input type="date" name="firstAlbumDate" id="firstAlbumDate"><br>
+
     
         <label>Number of Members:</label><br>
         <input type="checkbox" name="members" value="1"> 1 Member<br>
@@ -121,8 +122,8 @@
         <input type="checkbox" name="members" value="5"> 5 or more Members<br>
     
         <label for="locations">Concert Locations:</label>
-        <select name="locations" id="locations" multiple>
-            <option value="">Select a location (optional)</option> <!-- Default value -->
+        <select name="locations" id="locations" >
+            <option value="" selected>Select a location (optional)</option> <!-- Default value -->
             {{range .Locations}}
             <option value="{{.}}">{{.}}</option>
             {{end}}

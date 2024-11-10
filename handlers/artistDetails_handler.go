@@ -14,7 +14,7 @@ func ArtistDetailHandler(w http.ResponseWriter, r *http.Request) {
 	err2 := controllers.FetchData("https://groupietrackers.herokuapp.com/api/artists/"+id, &artist)
 	if err2 != nil {
 		ErrorHandler(w, r, http.StatusNotFound)
-		return 
+		return
 	}
 	// Check if artist was found (ID 0 indicates artist not found)
 	if artist.ID == 0 {
@@ -26,7 +26,7 @@ func ArtistDetailHandler(w http.ResponseWriter, r *http.Request) {
 		ErrorHandler(w, r, http.StatusInternalServerError)
 		return
 	}
-	
+
 	if err := renderTemplate(w, "artist.html", artist); err != nil {
 		ErrorHandler(w, r, http.StatusMethodNotAllowed)
 		return
