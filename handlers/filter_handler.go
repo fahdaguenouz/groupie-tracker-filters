@@ -42,6 +42,8 @@ func FilterHandler(w http.ResponseWriter, r *http.Request) {
 	firstAlbumDate := r.FormValue("firstAlbumDate") // New filter for full date of first album
 	members := r.Form["members"]  
 	locations := r.Form["locations"]
+	fmt.Println("User input for reation date :", creationYear)
+
 	fmt.Println("User input for first album date:", firstAlbumDate)
 	fmt.Println("User selected members filter:", members)
 	fmt.Println("User selected locations filter:", locations)
@@ -148,7 +150,7 @@ func FilterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 // Apply location filter (user selected location)
-if len(locations) > 0 {
+if len(locations[0]) > 0 {
 	var tempArtists []models.Artist
 	selectedLocation := locations[0] // Only one location selected by the user
 
